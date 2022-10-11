@@ -164,3 +164,70 @@ resource symbolicname 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' =
   }
 }
 
+resource sqlDbDiagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: sqlDB.name
+  scope: sqlDB
+  properties: {
+    workspaceId: logAnalyticsWorkspace.id
+    logs: [
+      {
+        category: 'SQLInsights'
+        enabled: true
+      }
+      {
+        category: 'AutomaticTuning'
+        enabled: true
+      }
+      {
+        category: 'QueryStoreRuntimeStatistics'
+        enabled: true
+      }
+      {
+        category: 'QueryStoreWaitStatistics'
+        enabled: true
+      }
+      {
+        category: 'Errors'
+        enabled: true
+      }
+      {
+        category: 'DatabaseWaitStatistics'
+        enabled: true
+      }
+      {
+        category: 'Timeouts'
+        enabled: true
+      }
+      {
+        category: 'Blocks'
+        enabled: true
+      }
+      {
+        category: 'Deadlocks'
+        enabled: true
+      }
+      {
+        category: 'DevOpsOperationsAudit'
+        enabled: true
+      }
+      {
+        category: 'SQLSecurityAuditEvents'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'Basic'
+        enabled: true
+      }
+      {
+        category: 'InstanceAndAppAdvanced'
+        enabled: true
+      }
+      {
+        category: 'WorkloadManagement'
+        enabled: true
+      }
+    ]
+  }
+}
