@@ -153,6 +153,9 @@ resource sqlDB 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
     name: 'Standard'
     tier: 'Standard'
   }
+  properties: {
+    sampleName: 'AdventureWorksLT'
+  }
 }
 
 resource symbolicname 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
