@@ -129,12 +129,18 @@ var serverName = '${resourceBaseName}-db-server'
 
 param sqlDBName string = '${resourceBaseName}-db'
 
-@description('The administrator username of the SQL logical server.')
+@description('The administrator username of the Azure SQL server.')
 param sqlAdminLogin string
 
-@description('The administrator password of the SQL logical server.')
+@description('The administrator password of the Azure SQL server.')
 @secure()
 param sqlAdminPassword string
+
+@description('Login (email) of Azure AD Administrator of the Azure SQL server.')
+param azureADSqlAdmin string
+
+@description('SID (object ID)  of Azure AD Administrator of the Azure SQL server.')
+param azureADSqlAdminSid string
 
 resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {
   name: serverName
@@ -142,6 +148,14 @@ resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      azureADOnlyAuthentication: true
+      login: azureADSqlAdmin
+      principalType: 'User'
+      sid: azureADSqlAdminSid
+      tenantId: tenant().tenantId
+    }
   }
 }
 
@@ -158,7 +172,7 @@ resource sqlDB 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
   }
 }
 
-resource symbolicname 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
+resource sqlDbFirewallRule 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
   name: 'AllowAllWindowsAzureIps'
   parent: sqlServer
   properties: {
