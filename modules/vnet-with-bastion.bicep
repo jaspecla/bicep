@@ -100,3 +100,5 @@ resource bastion 'Microsoft.Network/bastionHosts@2022-01-01' = {
     scaleUnits: numScaleUnits
   }
 }
+
+output defaultSubnetId string = vnet::defaultSubnet.id
