@@ -1,13 +1,5 @@
-// @description('Username for the Virtual Machine.')
-// param adminUsername string
-
-// @description('Password for the Virtual Machine.')
-// @minLength(12)
-// @secure()
-// param adminPassword string
-
 @description('Size of the virtual machine.')
-param vmSize string = 'Standard_D2s_v5'
+param vmSize string = 'Standard_D4s_v3'
 
 @description('Location for all resources.')
 param location string = resourceGroup().location
@@ -17,7 +9,7 @@ param vmName string = 'simple-vm'
 
 var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var nicName = '${vmName}-nic'
-var networkSecurityGroupName = 'default-NSG'
+var networkSecurityGroupName = '${vmName}-nsg'
 
 @description('Name of the resource group in which to create Networking resources.')
 param networkingResourceGroupName string = 'Networking'
@@ -38,7 +30,6 @@ resource stg 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   kind: 'Storage'
 }
 
-
 resource securityGroup 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
   name: networkSecurityGroupName
   location: location
@@ -46,7 +37,6 @@ resource securityGroup 'Microsoft.Network/networkSecurityGroups@2021-02-01' = {
     securityRules: []
   }
 }
-
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   name: nicName
@@ -66,39 +56,40 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   }
 }
 
-@description('The name of the resource group containing non-managed deployment resources, not the place where this file will deploy resources.')
-param deploymentResourceGroupName string = 'Deployment'
+@description('The name of the resource group containing the VM Image Gallery.')
+param vmImageGalleryResourceGroup string = 'VM_Images'
 
-@description('The name of the pre-existing disk resource (in the deployment resourced group) to use as the OS Disk.')
-param vmOsDiskName string = 'windows-dev-machine-disk'
+@description('The name of the VM Image to use from the gallery')
+param vmImageName string = 'computer_gallery_demo/specialized-dev-vm'
 
-resource vmOsDisk 'Microsoft.Compute/disks@2022-07-02' existing = {
-  scope: resourceGroup(deploymentResourceGroupName)
-  name: vmOsDiskName
+@description('The version of the image to use.')
+param vmImageVersionName string = '0.0.2'
+
+resource vmImage 'Microsoft.Compute/galleries/images@2022-03-03' existing = {
+  scope: resourceGroup(vmImageGalleryResourceGroup)
+  name: vmImageName
 }
 
+resource vmImageVersion 'Microsoft.Compute/galleries/images/versions@2022-03-03' existing = {
+  name: vmImageVersionName
+  parent: vmImage
+}
 
-resource vm 'Microsoft.Compute/virtualMachines@2021-03-01' = {
+resource vm 'Microsoft.Compute/virtualMachines@2022-08-01' = {
   name: vmName
   location: location
   properties: {
     hardwareProfile: {
       vmSize: vmSize
     }
-    // osProfile: {
-    //   computerName: vmName
-    //   adminUsername: adminUsername
-    //   adminPassword: adminPassword
-    // }
     storageProfile: {
-      osDisk: {
-        createOption: 'Attach'
-        deleteOption: 'Detach'
-        managedDisk: {
-          id: vmOsDisk.id
-        }
-        osType: 'Windows'
+      imageReference: {
+        id: vmImageVersion.id
       }
+      osDisk: {
+        createOption: 'FromImage'
+      }
+      dataDisks: []
     }
     networkProfile: {
       networkInterfaces: [
