@@ -106,3 +106,25 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-08-01' = {
     }
   }
 }
+
+@description('The email address of the person to alert when the VM is scheduled to shut down.')
+param shutDownEmail string
+
+resource shutdownTask 'Microsoft.DevTestLab/schedules@2018-09-15' = {
+  name: 'shutdown-computevm-simple-vm'
+  location: location
+  properties: {
+    dailyRecurrence: {
+      time: '2300'
+    }
+    notificationSettings: {
+      emailRecipient: shutDownEmail
+      status: 'Enabled'
+      timeInMinutes: 30
+    }
+    status: 'Enabled'
+    targetResourceId: vm.id
+    taskType: 'ComputeVmShutdownTask'
+    timeZoneId: 'Eastern Standard Time'
+  }
+}
